@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MLOps — Del notebook a producción</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05060f; --ink:#e8efff; --mute:#8b97b8; --line:rgba(120,160,255,.16);
+  --cyan:#4de2ff; --violet:#8b5cff; --green:#4dffb0; --amber:#ffb547; --red:#ff4d6d;
+  --panel:rgba(8,12,28,.58);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:"Space Grotesk",system-ui,sans-serif;color-scheme:dark}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+.vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 65% 50%,transparent 40%,rgba(5,6,15,.75) 100%),linear-gradient(90deg,rgba(5,6,15,.7) 0%,transparent 45%)}
+.slide{position:fixed;inset:0;display:flex;align-items:center;padding:0 6vw;pointer-events:none;visibility:hidden}
+.slide.active{visibility:visible}
+.slide.active .panel{pointer-events:auto}
+.panel{position:relative;width:min(560px,100%);padding:32px 34px;border-radius:34px;max-height:88vh;overflow:auto;scrollbar-width:none;
+  background:linear-gradient(140deg,rgba(255,255,255,.15),rgba(255,255,255,.045) 42%,rgba(255,255,255,.08));
+  backdrop-filter:blur(30px) saturate(190%) brightness(1.1);-webkit-backdrop-filter:blur(30px) saturate(190%) brightness(1.1);
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -1px 0 rgba(255,255,255,.1),inset 1.5px 0 0 rgba(255,255,255,.22),inset -1px 0 0 rgba(255,255,255,.1),inset 0 0 50px rgba(255,255,255,.05),0 34px 80px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.35)}
+.panel::-webkit-scrollbar{display:none}
+.panel::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 60% at 15% -10%,rgba(255,255,255,.22),transparent 55%)}
+.panel.bare{background:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding:0;width:min(720px,100%);overflow:visible}
+.panel.bare::after{display:none}
+.rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--i,0)*80ms + 250ms)}
+.slide.active .rv{opacity:1;transform:none}
+.kicker{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px}
+h1{font-size:clamp(64px,10vw,150px);line-height:.9;font-weight:700;letter-spacing:-.04em;background:linear-gradient(100deg,#fff 0%,var(--cyan) 45%,var(--violet) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:22px}
+h2{font-size:clamp(26px,3vw,40px);line-height:1.08;font-weight:700;letter-spacing:-.025em;margin-bottom:18px}
+.sub{font-size:clamp(17px,1.5vw,22px);color:#c3cdea;line-height:1.45;max-width:30em}
+.meta{margin-top:30px;font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--mute);letter-spacing:.06em}
+ul.pts{list-style:none;display:grid;gap:12px}
+ul.pts li{position:relative;padding-left:26px;font-size:15.5px;line-height:1.4;color:#cfd8f2}
+ul.pts li::before{content:"";position:absolute;left:2px;top:.5em;width:9px;height:9px;border-radius:50%;background:var(--c,var(--cyan));box-shadow:0 0 12px var(--c,var(--cyan))}
+ul.pts.bad li{--c:var(--red)} ul.pts.good li{--c:var(--green)}
+ul.pts b{color:#fff;font-weight:600}
+.callout{margin-top:20px;padding:14px 18px;background:rgba(255,255,255,.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.28);font-size:14px;line-height:1.5;color:#dfe6fa;border-radius:22px}
+.big{font-size:clamp(44px,5vw,72px);font-weight:700;letter-spacing:-.04em;line-height:1}
+.big small{font-size:.35em;font-weight:500;color:var(--mute);letter-spacing:0;margin-left:8px}
+.g{color:var(--green)} .c{color:var(--cyan)} .r{color:var(--red)} .a{color:var(--amber)} .v{color:var(--violet)}
+.row{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px}
+.stat{flex:1;min-width:140px;padding:14px 18px;border-radius:22px;background:rgba(255,255,255,.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 0 0 1px rgba(255,255,255,.06)}
+.stat .l{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.stat .n{font-size:28px;font-weight:700;letter-spacing:-.03em}
+.legend{display:flex;gap:18px;margin-top:16px;font-size:13px;color:var(--mute)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.steps{list-style:none;display:grid;gap:8px;counter-reset:s}
+.step{counter-increment:s;display:flex;gap:14px;align-items:baseline;padding:10px 14px;border-radius:18px;transition:.35s;color:#9fabcc;font-size:14.5px}
+.step::before{content:counter(s,decimal-leading-zero);font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--mute)}
+.step b{color:inherit;font-weight:600;min-width:98px}
+.step.active{background:rgba(255,255,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.45);color:#fff}
+.step.active::before{color:var(--cyan)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{padding:7px 13px;border-radius:999px;background:rgba(255,255,255,.09);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);font-size:12.5px;color:#e3e9fb}
+.chip b{color:var(--cyan);font-weight:600;margin-right:4px}
+.ctrl{display:grid;gap:3px;margin:12px 0}
+.ctrl label{display:flex;justify-content:space-between;font-size:13px;color:#b4bfdc}
+.ctrl label span{font-family:"JetBrains Mono",monospace;color:#fff}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,.14);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--cyan);box-shadow:0 0 14px var(--cyan);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border:none;border-radius:50%;background:var(--cyan);cursor:pointer}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.cmp .stat.bad{background:rgba(255,77,109,.13);box-shadow:inset 0 1px 0 rgba(255,160,175,.45),inset 0 0 0 1px rgba(255,77,109,.18)}
+.cmp .stat.ok{background:rgba(77,255,176,.11);box-shadow:inset 0 1px 0 rgba(170,255,220,.45),inset 0 0 0 1px rgba(77,255,176,.18)}
+.foot{margin-top:16px;font-size:11.5px;color:var(--mute);line-height:1.4}
+.ask{font-size:clamp(22px,2.4vw,32px);line-height:1.2;font-weight:600;letter-spacing:-.02em;margin-bottom:20px}
+.timeline{display:grid;gap:10px}
+.tl{display:grid;grid-template-columns:70px 1fr;gap:12px;font-size:14px;line-height:1.4;color:#cfd8f2}
+.tl em{font-style:normal;font-family:"JetBrains Mono",monospace;color:var(--cyan);font-size:12px;padding-top:2px}
+/* HUD */
+.hud{position:fixed;left:0;right:0;bottom:0;padding:14px 6vw 16px;display:flex;align-items:center;gap:18px;font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--mute);z-index:5}
+.dots{display:flex;gap:8px;flex:1}
+.dots button{width:26px;height:4px;border:none;border-radius:3px;background:rgba(255,255,255,.16);cursor:pointer;transition:.3s;padding:0}
+.dots button.on{background:var(--cyan);box-shadow:0 0 10px var(--cyan);width:44px}
+.dots button.done{background:rgba(77,226,255,.45)}
+.timer{text-align:right;line-height:1.5;padding:8px 16px;border-radius:20px;background:rgba(255,255,255,.08);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+.spk{position:fixed;left:6vw;top:22px;z-index:6;display:flex;gap:10px;align-items:center;padding:8px 16px 8px 10px;border-radius:999px;background:rgba(255,255,255,.09);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.4);font-size:13px;color:#fff}
+.spk i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:700;font-size:12px;color:#05060f;background:var(--sc,#4de2ff)}
+.timer b{color:#fff;font-weight:600;font-size:15px}
+.timer.over b{color:var(--amber)}
+.bar{position:fixed;left:0;top:0;height:3px;width:0;background:linear-gradient(90deg,var(--cyan),var(--violet));z-index:6;transition:width .5s linear}
+.notes{position:fixed;right:24px;top:24px;width:min(380px,calc(100% - 48px));padding:18px 22px;border-radius:28px;background:rgba(20,26,50,.55);backdrop-filter:blur(30px) saturate(190%);-webkit-backdrop-filter:blur(30px) saturate(190%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),0 24px 60px rgba(0,0,0,.5);z-index:8;font-size:14px;line-height:1.55;color:#cfd8f2;display:none}
+.notes.on{display:block}
+.notes h4{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
+#load{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:20;font-family:"JetBrains Mono",monospace;color:var(--mute);letter-spacing:.2em;font-size:12px;transition:opacity .8s}
+@media(max-width:900px){.slide{align-items:flex-end;padding:0 16px 56px}.panel{padding:20px;max-height:56vh}.cmp{grid-template-columns:1fr}h1{font-size:72px}}
+</style>
+</head>
+<body>
+<div id="load">CARGANDO ESCENA 3D…</div>
+<canvas id="gl"></canvas>
+<div class="vignette"></div>
+<div class="bar" id="bar"></div>
+
+<!-- 1 TITULO -->
+<section class="slide" id="s1"><div class="panel bare">
+  <p class="kicker rv">Plataforma ML · Equipo de 6</p>
+  <h1 class="rv">MLOps</h1>
+  <p class="sub rv">Del notebook a producción — sin miedo, sin sorpresas y con la factura bajo control.</p>
+  <p class="meta rv">10 MIN · PROPUESTA DE ADOPCIÓN · → PARA AVANZAR · N NOTAS · F PANTALLA COMPLETA</p>
+</div></section>
+
+<!-- 2 PROBLEMA -->
+<section class="slide" id="s2"><div class="panel">
+  <p class="kicker rv">01 · El problema</p>
+  <h2 class="rv">Hoy entrenamos y desplegamos a mano</h2>
+  <ul class="pts bad">
+    <li class="rv"><b>Entrenamientos sin versionar:</b> nadie sabe qué datos ni hiperparámetros dieron "el modelo bueno".</li>
+    <li class="rv"><b>Deploy manual de 2–3 días</b> que depende de una sola persona.</li>
+    <li class="rv"><b>Nadie mira el modelo en producción:</b> nos enteramos cuando se queja el cliente.</li>
+    <li class="rv"><b>GPUs on-demand prendidas 24/7</b> "por las dudas".</li>
+  </ul>
+  <div class="callout rv">En un sistema de ML el código del modelo es una fracción chica: el resto es datos, infra y operación (Sculley et al., NeurIPS 2015, <i>Hidden Technical Debt in ML Systems</i>).</div>
+</div></section>
+
+<!-- 3 CICLO -->
+<section class="slide" id="s3"><div class="panel">
+  <p class="kicker rv">02 · La idea</p>
+  <h2 class="rv">MLOps = DevOps + datos + modelos</h2>
+  <ol class="steps" id="steps">
+    <li class="step rv"><b>Datos</b> versionados y validados</li>
+    <li class="step rv"><b>Entrenar</b> pipelines reproducibles</li>
+    <li class="step rv"><b>Validar</b> tests de datos y de modelo</li>
+    <li class="step rv"><b>Desplegar</b> CI/CD con canary</li>
+    <li class="step rv"><b>Monitorear</b> drift, latencia, calidad</li>
+    <li class="step rv"><b>Re-entrenar</b> automático por trigger</li>
+  </ol>
+  <p class="foot rv">Un ciclo cerrado: cada vuelta es automática, auditable y repetible.</p>
+</div></section>
+
+<!-- 4 COSTO -->
+<section class="slide" id="s4"><div class="panel">
+  <p class="kicker rv">03 · Costo y riesgo de entrenar</p>
+  <h2 class="rv">Entrenar a ciegas es caro</h2>
+  <ul class="pts good">
+    <li class="rv"><b>Spot instances:</b> hasta 90% menos que on-demand (AWS), con <b>checkpoints</b> para no perder horas si se interrumpen.</li>
+    <li class="rv"><b>Experiment tracking:</b> no repetimos corridas por no saber qué ya probamos.</li>
+    <li class="rv"><b>Cache de features y pipelines:</b> no recalculamos lo mismo.</li>
+    <li class="rv"><b>Reproducibilidad:</b> el modelo de hace 6 meses se puede reconstruir y auditar.</li>
+  </ul>
+  <div class="legend rv"><span><i style="background:#ff7a4d"></i>Hoy (índice 100)</span><span><i style="background:#4dffb0"></i>Con MLOps</span></div>
+  <p class="foot rv">Índices ilustrativos: reemplazar con datos reales del equipo.</p>
+</div></section>
+
+<!-- 5 DRIFT -->
+<section class="slide" id="s5"><div class="panel">
+  <p class="kicker rv">04 · Riesgo · Drift</p>
+  <h2 class="rv">Un modelo sin monitoreo se pudre en silencio</h2>
+  <div class="ctrl rv"><label>Días hasta que alguien lo nota <span id="dDays">20</span></label><input type="range" id="drift" min="0" max="45" value="20"></div>
+  <div class="row rv"><div class="stat"><div class="l">Datos fuera de distribución</div><div class="n a" id="ood">0%</div></div></div>
+  <div class="cmp rv">
+    <div class="stat bad"><div class="l">Sin monitoreo</div><div class="n r" id="lossBad">$0</div></div>
+    <div class="stat ok"><div class="l">Alerta en ≤2 días + retrain</div><div class="n g" id="lossGood">$0</div></div>
+  </div>
+  <p class="foot rv">Supuestos ilustrativos: USD 20k/día en decisiones del modelo, −0,4 pp de precisión por día de drift. Pérdida acumulada = 40·d².</p>
+</div></section>
+
+<!-- 6 CICD -->
+<section class="slide" id="s6"><div class="panel">
+  <p class="kicker rv">05 · Despliegues automatizados</p>
+  <h2 class="rv">De <span class="r">2 días</span> a <span class="g">15 minutos</span></h2>
+  <ul class="pts good">
+    <li class="rv">Tests de <b>código, datos y modelo</b> en cada commit.</li>
+    <li class="rv"><b>Canary al 5%</b> comparando métricas contra el modelo actual.</li>
+    <li class="rv"><b>Rollback automático</b> si cae la métrica. Un click, sin heroísmos.</li>
+    <li class="rv">El mismo pipeline en dev, staging y prod.</li>
+  </ul>
+  <div class="row rv">
+    <div class="stat"><div class="l">Desplegados</div><div class="n g" id="nDep">0</div></div>
+    <div class="stat"><div class="l">Frenados antes de prod</div><div class="n r" id="nBlk">0</div></div>
+  </div>
+</div></section>
+
+<!-- 7 AWS -->
+<section class="slide" id="s7"><div class="panel">
+  <p class="kicker rv">06 · Infra escalable · AWS</p>
+  <h2 class="rv">Pagamos por lo que usamos, no por el pico</h2>
+  <div class="row rv" style="margin-top:0">
+    <div class="stat"><div class="l">Instancias activas</div><div class="n c"><span id="asN">0</span><small>/ 20</small></div></div>
+    <div class="stat"><div class="l">Costo vs. provisión fija</div><div class="n g" id="asS">-0%</div></div>
+  </div>
+  <div class="chips">
+    <span class="chip rv"><b>S3</b>datos y artefactos</span>
+    <span class="chip rv"><b>SageMaker Pipelines</b>entrenamiento</span>
+    <span class="chip rv"><b>Model Registry</b>versiones y aprobación</span>
+    <span class="chip rv"><b>CodePipeline + ECR</b>CI/CD</span>
+    <span class="chip rv"><b>Endpoints</b>autoscaling</span>
+    <span class="chip rv"><b>Model Monitor + CloudWatch</b>drift y alertas</span>
+    <span class="chip rv"><b>EventBridge</b>triggers de retrain</span>
+  </div>
+</div></section>
+
+<!-- 8 ROI -->
+<section class="slide" id="s8"><div class="panel">
+  <p class="kicker rv">07 · El número que importa</p>
+  <h2 class="rv">Ahorro anual estimado</h2>
+  <div class="ctrl rv"><label>Modelos en producción <span id="vM">8</span></label><input type="range" id="iM" min="1" max="30" value="8"></div>
+  <div class="ctrl rv"><label>Gasto mensual de cómputo ML (USD) <span id="vC">12000</span></label><input type="range" id="iC" min="2000" max="60000" step="1000" value="12000"></div>
+  <div class="ctrl rv"><label>Horas/semana del equipo en tareas manuales <span id="vH">60</span></label><input type="range" id="iH" min="10" max="200" step="5" value="60"></div>
+  <div class="ctrl rv"><label>Costo por hora (USD) <span id="vR">40</span></label><input type="range" id="iR" min="20" max="100" step="5" value="40"></div>
+  <div class="row rv">
+    <div class="stat"><div class="l"><span class="c">■</span> Cómputo −40%</div><div class="n" id="rC">$0</div></div>
+    <div class="stat"><div class="l"><span class="v">■</span> Horas −70%</div><div class="n" id="rT">$0</div></div>
+    <div class="stat"><div class="l"><span class="g">■</span> Drift evitado</div><div class="n" id="rD">$0</div></div>
+  </div>
+  <div class="row rv" style="align-items:flex-end">
+    <div style="flex:2"><div class="stat" style="border-color:rgba(77,255,176,.4)"><div class="l">Total / año</div><div class="big g" id="rTot">$0</div></div></div>
+    <div style="flex:1"><div class="stat"><div class="l">Payback</div><div class="n" id="rPay">—</div></div></div>
+  </div>
+  <p class="foot rv">Inversión de adopción supuesta: USD 30.000 (setup + tooling año 1). Supuestos editables, no promesas.</p>
+</div></section>
+
+<!-- DEMO -->
+<section class="slide" id="sdemo"><div class="panel">
+  <p class="kicker rv">Demo en vivo</p>
+  <h2 class="rv">Del commit a producción, en vivo</h2>
+  <ol class="steps" id="dsteps">
+    <li class="step rv"><b>Commit</b> cambio en el código del modelo</li>
+    <li class="step rv"><b>Pipeline</b> tests + entrenamiento automático</li>
+    <li class="step rv"><b>Registry</b> nueva versión, aprobada</li>
+    <li class="step rv"><b>Canary</b> 5% del tráfico al modelo nuevo</li>
+    <li class="step rv"><b>Alerta</b> drift detectado y re-entrenamiento</li>
+  </ol>
+  <p class="foot rv">Cambiá estos pasos por el flujo real de tu demo. Cambio de pantalla: Alt+Tab.</p>
+</div></section>
+
+<!-- 9 EQUIPO -->
+<section class="slide" id="s9"><div class="panel">
+  <p class="kicker rv">08 · Cómo lo hacemos · 6 personas</p>
+  <h2 class="rv">Roadmap de 90 días</h2>
+  <div class="timeline">
+    <div class="tl rv"><em>MES 1</em><div><b>Fundaciones.</b> Datos versionados, tracking de experimentos, pipeline de entrenamiento reproducible.</div></div>
+    <div class="tl rv"><em>MES 2</em><div><b>Delivery.</b> CI/CD, Model Registry, endpoints con autoscaling y canary.</div></div>
+    <div class="tl rv"><em>MES 3</em><div><b>Operación.</b> Monitoreo de drift, alertas y re-entrenamiento automático.</div></div>
+  </div>
+  <p class="foot rv">Roles: Data Eng · ML Eng ×2 · Data Sci · DevOps/SRE · Product. Todos tocan la plataforma; nadie es cuello de botella.</p>
+</div></section>
+
+<!-- 10 CIERRE -->
+<section class="slide" id="s10"><div class="panel bare">
+  <p class="kicker rv">09 · Lo que pedimos</p>
+  <p class="ask rv">Aprobar un <span class="c">piloto de 90 días</span> con 1 modelo y el equipo completo.</p>
+  <ul class="pts good" style="max-width:520px">
+    <li class="rv">Deploy en <b>&lt; 1 hora</b> (hoy 2–3 días)</li>
+    <li class="rv">Costo de cómputo <b>−30%</b></li>
+    <li class="rv">Drift detectado en <b>&lt; 48 h</b></li>
+  </ul>
+  <h1 class="rv" style="margin-top:34px;font-size:clamp(48px,6vw,90px)">¿Preguntas?</h1>
+</div></section>
+
+<div class="spk" id="spk"><i id="spkI">A</i><span id="spkN">Ana</span></div>
+<div class="notes" id="notes"><h4 id="nh"></h4><div id="nb"></div></div>
+<div class="hud">
+  <div class="dots" id="dots"></div>
+  <div class="timer" id="timer"><div>TOTAL <b id="tTot">00:00</b> / 10:00</div><div>SLIDE <b id="tSl">0:00</b> / <span id="tTg">0:30</span></div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const rand=(a,b)=>a+Math.random()*(b-a);
+const gauss=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const easeOut=x=>1-Math.pow(1-clamp(x),3);
+const usd=n=>'$'+Math.round(n).toLocaleString('es-AR');
+
+/* ---------- renderer ---------- */
+const canvas=$('#gl');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setClearColor(0x05060f);
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x05060f,0.014);
+const camera=new THREE.PerspectiveCamera(50,1,.1,3000);
+const SP=200;
+function resize(){
+  renderer.setSize(innerWidth,innerHeight,false);
+  camera.aspect=innerWidth/innerHeight;
+  if(innerWidth>900)camera.setViewOffset(innerWidth,innerHeight,-innerWidth*.2,0,innerWidth,innerHeight);
+  else camera.setViewOffset(innerWidth,innerHeight,0,innerHeight*.14,innerWidth,innerHeight);
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize',resize);resize();
+
+scene.add(new THREE.AmbientLight(0x8899ff,.7));
+const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(5,10,7);scene.add(dl);
+
+/* ---------- helpers ---------- */
+const GLOWTEX=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const g=x.createRadialGradient(64,64,0,64,64,64);
+  g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.25,'rgba(255,255,255,.5)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return new THREE.CanvasTexture(c)})();
+function glow(color,size){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOWTEX,color,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.setScalar(size);return s}
+function pmat(size,color,extra){return new THREE.PointsMaterial(Object.assign({size,map:GLOWTEX,color,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false},extra||{}))}
+function label(text,o){o=o||{};const px=o.px||56,scale=o.scale||.9;
+  const c=document.createElement('canvas');c.width=512;c.height=128;const x=c.getContext('2d');
+  x.font=(o.weight||600)+' '+px+'px '+(o.mono?'"JetBrains Mono"':'"Space Grotesk"')+',sans-serif';
+  x.textAlign='center';x.textBaseline='middle';x.shadowColor='rgba(0,0,0,.9)';x.shadowBlur=10;x.fillStyle=o.color||'#e8efff';x.fillText(text,256,64);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false,depthTest:false,fog:false}));
+  sp.scale.set(scale*4,scale,1);sp.renderOrder=10;return sp}
+function hsl(h,s,l){return new THREE.Color().setHSL(h,s,l)}
+
+/* ---------- stars ---------- */
+const stars=(()=>{const n=1800,a=new Float32Array(n*3);for(let i=0;i<n;i++){a[i*3]=rand(-160,160);a[i*3+1]=rand(-90,90);a[i*3+2]=rand(-170,-25)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(a,3));
+  const p=new THREE.Points(g,pmat(1.4,0x9fb4ff,{opacity:.7,fog:false}));scene.add(p);return p})();
+
+const mouse={x:0,y:0};
+addEventListener('pointermove',e=>{mouse.x=e.clientX/innerWidth*2-1;mouse.y=e.clientY/innerHeight*2-1});
+
+/* ---------- shared state read by scenes ---------- */
+const S={drift:20,roi:{c:0,t:0,d:0}};
+
+/* ---------- scene builders: each returns {cam,look,update(t,dt)} ---------- */
+function buildHero(g){
+  const layers=[4,7,7,3],cols=[0x4de2ff,0x8b5cff,0x8b5cff,0x4dffb0],nodes=[];
+  layers.forEach((n,li)=>{const l=[];for(let i=0;i<n;i++){
+    const p=new THREE.Vector3((li-1.5)*3.8,(i-(n-1)/2)*1.4,rand(-1.1,1.1));
+    const m=new THREE.Mesh(new THREE.SphereGeometry(.17,16,16),new THREE.MeshBasicMaterial({color:cols[li]}));m.position.copy(p);g.add(m);
+    const s=glow(cols[li],1.5);s.position.copy(p);g.add(s);l.push(p)}nodes.push(l)});
+  const edges=[],arr=[];
+  for(let li=0;li<3;li++)nodes[li].forEach(a=>nodes[li+1].forEach(b=>{edges.push([a,b]);arr.push(a.x,a.y,a.z,b.x,b.y,b.z)}));
+  const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(arr,3));
+  g.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0x4de2ff,transparent:true,opacity:.14})));
+  const N=170,sig=[],pos=new Float32Array(N*3);
+  for(let i=0;i<N;i++)sig.push({e:edges[(Math.random()*edges.length)|0],t:Math.random(),v:rand(.25,.75)});
+  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.add(new THREE.Points(pg,pmat(.4,0xffffff)));
+  g.scale.setScalar(.85);
+  return{cam:[0,0,17],look:[0,0,0],update(t,dt){
+    sig.forEach((s,i)=>{s.t+=dt*s.v;if(s.t>1){s.t=0;s.e=edges[(Math.random()*edges.length)|0]}
+      const[a,b]=s.e;pos[i*3]=a.x+(b.x-a.x)*s.t;pos[i*3+1]=a.y+(b.y-a.y)*s.t;pos[i*3+2]=a.z+(b.z-a.z)*s.t});
+    pg.attributes.position.needsUpdate=true;g.rotation.y=Math.sin(t*.25)*.35;g.rotation.x=Math.sin(t*.17)*.1}};
+}
+
+function buildChaos(g){
+  const cols=[0xff4d6d,0xffb547,0xff7a4d],items=[];
+  for(let i=0;i<34;i++){
+    const m=new THREE.Mesh(new THREE.OctahedronGeometry(rand(.3,.7)),new THREE.MeshBasicMaterial({color:cols[i%3],wireframe:true,transparent:true}));
+    const th=rand(0,6.28),ph=Math.acos(rand(-1,1)),r=rand(1.5,6);
+    const base=new THREE.Vector3(r*Math.sin(ph)*Math.cos(th),r*Math.sin(ph)*Math.sin(th)*.8,r*Math.cos(ph));
+    items.push({m,base,f:rand(1,4),ph:rand(0,6),a:rand(.1,.5)});g.add(m)}
+  const P=56,pairs=[];for(let i=0;i<P;i++)pairs.push([(Math.random()*34)|0,(Math.random()*34)|0]);
+  const lp=new Float32Array(P*6),lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.BufferAttribute(lp,3));
+  g.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0xff4d6d,transparent:true,opacity:.28})));
+  return{cam:[0,0,15],look:[0,0,0],update(t,dt){
+    items.forEach(o=>{o.m.position.set(o.base.x+Math.sin(t*o.f+o.ph)*o.a*2,o.base.y+Math.cos(t*o.f*1.3+o.ph)*o.a*2,o.base.z+Math.sin(t*o.f*.7)*o.a);
+      o.m.rotation.x+=dt*o.f*.4;o.m.rotation.y+=dt*o.f*.3;o.m.material.opacity=Math.random()<.01?.2:.85});
+    pairs.forEach(([a,b],i)=>{const A=items[a].m.position,B=items[b].m.position;lp.set([A.x,A.y,A.z,B.x,B.y,B.z],i*6)});
+    lg.attributes.position.needsUpdate=true;g.rotation.y=t*.12}};
+}
+
+const STEP_NAMES=['Datos','Entrenar','Validar','Desplegar','Monitorear','Re-entrenar'];
+function buildCycle(g){
+  const R=5.2,nodes=[],ring=new THREE.Group();g.add(ring);
+  ring.add(new THREE.Mesh(new THREE.TorusGeometry(R,.035,8,160),new THREE.MeshBasicMaterial({color:0x4de2ff,transparent:true,opacity:.5})));
+  for(let i=0;i<6;i++){
+    const a=Math.PI/2-i*Math.PI/3,col=hsl(.53+i*.075,.9,.6);
+    const m=new THREE.Mesh(new THREE.SphereGeometry(.5,24,24),new THREE.MeshBasicMaterial({color:col}));
+    m.position.set(Math.cos(a)*R,Math.sin(a)*R,0);const gl=glow(col,2.6);m.add(gl);ring.add(m);
+    const lb=label(STEP_NAMES[i],{scale:.8});lb.position.set(Math.cos(a)*(R+1.6),Math.sin(a)*(R+1.3),0);ring.add(lb);
+    nodes.push({m,gl})}
+  const orb=glow(0xffffff,1.8);ring.add(orb);
+  const core=label('MLOps',{scale:1.3,px:70,color:'#4de2ff'});ring.add(core);
+  const stepEls=$$('#steps .step');let last=-1;
+  return{cam:[0,0,17],look:[0,0,0],update(t){
+    const ph=t*.5,a=Math.PI/2-ph;orb.position.set(Math.cos(a)*R,Math.sin(a)*R,0.1);
+    const act=Math.round(ph/(Math.PI/3))%6;
+    nodes.forEach((n,i)=>{let d=Math.abs(((ph-i*Math.PI/3)%(2*Math.PI)+3*Math.PI)%(2*Math.PI)-Math.PI);const k=clamp(1-d/.9);
+      n.m.scale.setScalar(1+k*.6);n.gl.scale.setScalar(2.4+k*2)});
+    if(act!==last){stepEls.forEach((e,i)=>e.classList.toggle('active',i===act));last=act}
+    ring.rotation.x=Math.sin(t*.3)*.25;ring.rotation.y=Math.sin(t*.2)*.3}};
+}
+
+function buildBars(g){
+  const cats=[['Cómputo',100,35],['Reentrenos',100,20],['Horas manuales',100,30],['Incidentes',100,15]],bars=[];
+  cats.forEach((c,i)=>{const x=(i-1.5)*3.3;
+    const lb=label(c[0],{scale:.55,px:46,color:'#9fabcc'});lb.position.set(x,-.7,1.2);g.add(lb);
+    [[-.6,c[1],0xff7a4d],[.6,c[2],0x4dffb0]].forEach(([dx,val,col],k)=>{
+      const geo=new THREE.BoxGeometry(.95,1,.95);geo.translate(0,.5,0);
+      const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.35,metalness:.3,roughness:.35}));
+      m.position.set(x+dx,0,0);m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.35})));
+      g.add(m);const vl=label(String(val),{scale:.6,mono:true,color:k?'#4dffb0':'#ff9a70'});g.add(vl);
+      bars.push({m,vl,val,delay:.4+i*.18+k*.12,x:x+dx})})});
+  const grid=new THREE.GridHelper(15,15,0x24407a,0x111c3a);grid.position.y=-.01;g.add(grid);
+  return{cam:[0,4.5,14],look:[0,2.4,0],update(t){
+    bars.forEach(b=>{const h=Math.max(.001,b.val/100*6*easeOut((t-b.delay)/1.1));b.m.scale.y=h;b.vl.position.set(b.x,h+.55,0);b.vl.material.opacity=clamp((t-b.delay-.6)*2)});
+    g.rotation.y=Math.sin(t*.25)*.35-.15}};
+}
+
+function buildDrift(g){
+  const N=420,CX=-3.5,TH=2.9;
+  const baseA=[],baseB=[];for(let i=0;i<N;i++){baseA.push([gauss(),gauss(),gauss()]);baseB.push([gauss(),gauss(),gauss()])}
+  const pa=new Float32Array(N*3);baseA.forEach((b,i)=>{pa[i*3]=CX+b[0]*1.05;pa[i*3+1]=b[1]*1.05;pa[i*3+2]=b[2]*1.05});
+  const ga=new THREE.BufferGeometry();ga.setAttribute('position',new THREE.BufferAttribute(pa,3));g.add(new THREE.Points(ga,pmat(.22,0x4de2ff)));
+  const pb=new Float32Array(N*3),cb=new Float32Array(N*3);
+  const gb=new THREE.BufferGeometry();gb.setAttribute('position',new THREE.BufferAttribute(pb,3));gb.setAttribute('color',new THREE.BufferAttribute(cb,3));
+  g.add(new THREE.Points(gb,pmat(.3,0xffffff,{vertexColors:true})));
+  const shell=new THREE.Mesh(new THREE.IcosahedronGeometry(TH,2),new THREE.MeshBasicMaterial({color:0x4de2ff,wireframe:true,transparent:true,opacity:.1}));shell.position.x=CX;g.add(shell);
+  const l1=label('Entrenamiento',{scale:.6,color:'#4de2ff'});l1.position.set(CX,3.9,0);g.add(l1);
+  const l2=label('Producción hoy',{scale:.6,color:'#ffb547'});g.add(l2);
+  let shown=0,tick=0;const dEl=$('#dDays'),oEl=$('#ood'),lb=$('#lossBad'),lg=$('#lossGood');
+  const cin=new THREE.Color(0x4de2ff),cout=new THREE.Color(0xff4d6d);
+  return{cam:[0,2,15],look:[0,0,0],update(t,dt){
+    shown+=(S.drift-shown)*(1-Math.exp(-3*dt));
+    const k=shown/45,cx=CX+k*8,sc=1+k*.7;let out=0;
+    for(let i=0;i<N;i++){const b=baseB[i],x=cx+b[0]*sc*1.05,y=b[1]*sc*1.05+k*1.2,z=b[2]*sc*1.05;
+      pb[i*3]=x;pb[i*3+1]=y;pb[i*3+2]=z;const d=Math.hypot(x-CX,y,z),o=d>TH;if(o)out++;
+      const c=o?cout:cin;cb[i*3]=c.r;cb[i*3+1]=c.g;cb[i*3+2]=c.b}
+    gb.attributes.position.needsUpdate=true;gb.attributes.color.needsUpdate=true;
+    l2.position.set(cx,4.3+k*1.2,0);
+    shell.material.opacity=.1+(out/N>.15?.12*Math.abs(Math.sin(t*5)):0);
+    if(((tick++)&3)===0){const d=S.drift;dEl.textContent=d;oEl.textContent=Math.round(out/N*100)+'%';
+      lb.textContent=usd(40*d*d);lg.textContent=usd(40*Math.min(d,2)**2)}
+    g.rotation.y=Math.sin(t*.2)*.25}};
+}
+
+function buildPipeline(g){
+  const xs=[-9,-4.5,0,4.5,9],names=['Commit','Tests','Build','Canary 5%','Producción'];
+  const cols=[0xffffff,0x4de2ff,0x8b5cff,0xffb547,0x4dffb0];
+  const belt=new THREE.Mesh(new THREE.BoxGeometry(23,.08,.8),new THREE.MeshBasicMaterial({color:0x1b2c5e}));belt.position.y=-.6;g.add(belt);
+  xs.forEach((x,i)=>{const geo=new THREE.BoxGeometry(1.7,1.7,1.7);
+    const e=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:cols[i]}));e.position.set(x,.2,0);g.add(e);
+    const gl=glow(cols[i],3.2);gl.position.set(x,.2,0);g.add(gl);
+    const lb=label(names[i],{scale:.55,px:46,color:'#cfd8f2'});lb.position.set(x,-1.7,0);g.add(lb)});
+  const cubes=[],rings=[];let spawn=0,dep=0,blk=0;
+  const dE=$('#nDep'),bE=$('#nBlk');
+  function mk(){const m=new THREE.Mesh(new THREE.BoxGeometry(.5,.5,.5),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true}));
+    m.position.set(-11.5,.2,0);g.add(m);cubes.push({m,fail:Math.random()<.28,vy:0,dead:false,st:0})}
+  g.rotation.y=.5;
+  return{cam:[-4,3,17],look:[-4,0,0],update(t,dt){
+    spawn-=dt;if(spawn<=0){mk();spawn=.95}
+    for(let i=cubes.length-1;i>=0;i--){const c=cubes[i],m=c.m;
+      if(c.dead){c.vy-=dt*14;m.position.y+=c.vy*dt;m.rotation.x+=dt*5;m.rotation.z+=dt*4;m.material.opacity-=dt*.8;
+        if(m.material.opacity<=0){g.remove(m);cubes.splice(i,1)}continue}
+      m.position.x+=dt*3.2;m.rotation.y+=dt*2;
+      const st=xs.filter(x=>m.position.x>x).length;
+      if(st!==c.st){c.st=st;m.material.color.setHex(cols[Math.max(0,st-1)])}
+      if(c.fail&&m.position.x>xs[1]+.6){c.dead=true;c.vy=3;m.material.color.setHex(0xff4d6d);blk++;bE.textContent=blk}
+      else if(m.position.x>xs[4]+.5){g.remove(m);cubes.splice(i,1);dep++;dE.textContent=dep;
+        const r=new THREE.Mesh(new THREE.RingGeometry(.8,.95,48),new THREE.MeshBasicMaterial({color:0x4dffb0,transparent:true,side:THREE.DoubleSide}));
+        r.position.set(xs[4],.2,0);r.rotation.y=Math.PI/2;g.add(r);rings.push({r,a:0})}}
+    for(let i=rings.length-1;i>=0;i--){const o=rings[i];o.a+=dt;o.r.scale.setScalar(1+o.a*4);o.r.material.opacity=1-o.a;if(o.a>=1){g.remove(o.r);rings.splice(i,1)}}}};
+}
+
+function buildAuto(g){
+  const COLS=5,ROWS=4,boxes=[];
+  const on=new THREE.Color(0x4de2ff),off=new THREE.Color(0x1a2447);
+  for(let i=0;i<20;i++){const geo=new THREE.BoxGeometry(1.1,.5,1.1);geo.translate(0,.25,0);
+    const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0x1a2447,emissive:0x4de2ff,emissiveIntensity:0,metalness:.4,roughness:.4}));
+    m.position.set((i%COLS-2)*1.6,0,((i/COLS|0)-1.5)*1.6);m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x4de2ff,transparent:true,opacity:.4})));
+    g.add(m);boxes.push({m,cur:1})}
+  const H=120,line=new Float32Array(H*3),lgm=new THREE.BufferGeometry();lgm.setAttribute('position',new THREE.BufferAttribute(line,3));
+  const hist=new Array(H).fill(.5);g.add(new THREE.Line(lgm,new THREE.LineBasicMaterial({color:0x4dffb0})));
+  const lb=label('Tráfico en tiempo real',{scale:.5,px:44,color:'#4dffb0'});lb.position.set(0,-.9,5.2);g.add(lb);
+  const nEl=$('#asN'),sEl=$('#asS');let acc=0,avg=.5,tick=0,sampleT=0,act=10;
+  const f=t=>clamp(.5+.38*Math.sin(t*.5)+.1*Math.sin(t*1.7+1),.05,1);
+  return{cam:[0,7.5,12],look:[0,0,1],update(t,dt){
+    const v=f(t);act=clamp(Math.ceil(v*20),1,20);avg+=(act/20-avg)*dt*.15;
+    boxes.forEach((b,i)=>{const tg=i<act?1:0;b.cur+=(tg-b.cur)*(1-Math.exp(-6*dt));
+      b.m.scale.y=.3+b.cur*.7;b.m.material.emissiveIntensity=b.cur*.9;b.m.material.color.copy(off).lerp(on,b.cur*.5)});
+    sampleT+=dt;if(sampleT>.06){sampleT=0;hist.shift();hist.push(v)}
+    for(let i=0;i<H;i++){line[i*3]=(i/(H-1)-.5)*10;line[i*3+1]=hist[i]*2.2-.6;line[i*3+2]=5.2}
+    lgm.attributes.position.needsUpdate=true;
+    if(((tick++)&7)===0){nEl.textContent=act;sEl.textContent='−'+Math.round((1-avg)*100)+'%'}
+    g.rotation.y=Math.sin(t*.15)*.25}};
+}
+
+function buildRoi(g){
+  const defs=[['Cómputo',0x4de2ff,'c'],['Horas',0x8b5cff,'t'],['Drift',0x4dffb0,'d']],tw=[];
+  defs.forEach(([n,col,key],i)=>{const x=(i-1)*3.4,geo=new THREE.BoxGeometry(2,1,2);geo.translate(0,.5,0);
+    const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.45,metalness:.3,roughness:.3,transparent:true,opacity:.92}));
+    m.position.x=x;m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.4})));g.add(m);
+    const lb=label(n,{scale:.6,color:'#cfd8f2'});lb.position.set(x,-.8,1.4);g.add(lb);
+    const gl=glow(col,3);g.add(gl);tw.push({m,gl,key,x,h:.01})});
+  const grid=new THREE.GridHelper(14,14,0x24407a,0x111c3a);g.add(grid);
+  const N=140,pa=new Float32Array(N*3),sp=[];for(let i=0;i<N;i++){sp.push({x:rand(-5,5),y:rand(0,10),z:rand(-2,2),v:rand(.3,1)})}
+  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pa,3));g.add(new THREE.Points(pg,pmat(.25,0xbfffe6)));
+  return{cam:[0,5,19],look:[0,4,0],update(t,dt){
+    tw.forEach(o=>{const tg=Math.min(Math.sqrt(S.roi[o.key])/45,10.5)*easeOut(t/1.2);o.h+=(tg-o.h)*(1-Math.exp(-5*dt));
+      o.m.scale.y=Math.max(.01,o.h);o.gl.position.set(o.x,o.h+.3,0)});
+    sp.forEach((s,i)=>{s.y+=dt*s.v*1.4;if(s.y>11)s.y=0;pa[i*3]=s.x;pa[i*3+1]=s.y;pa[i*3+2]=s.z});pg.attributes.position.needsUpdate=true;
+    g.rotation.y=Math.sin(t*.3)*.4}};
+}
+
+function buildDemo(g){
+  const scr=new THREE.Group();g.add(scr);
+  const grid=new THREE.Mesh(new THREE.PlaneGeometry(9,5.6,18,11),new THREE.MeshBasicMaterial({color:0x4de2ff,wireframe:true,transparent:true,opacity:.18}));scr.add(grid);
+  const frame=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(9,5.6)),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.7}));scr.add(frame);
+  const bar=new THREE.Mesh(new THREE.PlaneGeometry(9,.12),new THREE.MeshBasicMaterial({color:0x4dffb0,transparent:true,opacity:.7,blending:THREE.AdditiveBlending}));scr.add(bar);
+  scr.add(glow(0x4de2ff,13));
+  const live=label('● LIVE',{scale:.7,color:'#ff4d6d',mono:true});live.position.set(-3.3,3.4,0);scr.add(live);
+  const rings=[];for(let i=0;i<3;i++){const r=new THREE.Mesh(new THREE.TorusGeometry(6+i*1.1,.015,6,120),new THREE.MeshBasicMaterial({color:0x8b5cff,transparent:true,opacity:.35}));r.rotation.x=1.2+i*.2;scr.add(r);rings.push(r)}
+  const els=$$('#dsteps .step');let last=-1;
+  return{cam:[0,0,15],look:[0,0,0],update(t){
+    bar.position.y=((t*1.2)%1)*5.6-2.8;live.material.opacity=.5+.5*Math.abs(Math.sin(t*3));
+    rings.forEach((r,i)=>r.rotation.z=t*.15*(i+1)*(i%2?-1:1));
+    scr.rotation.y=Math.sin(t*.3)*.35;scr.rotation.x=Math.sin(t*.22)*.1;
+    const a=Math.floor(t/3)%5;if(a!==last){els.forEach((e,i)=>e.classList.toggle('active',i===a));last=a}}};
+}
+
+function buildTeam(g){
+  const roles=['Data Eng','ML Eng','ML Eng','Data Sci','DevOps','Product'],mem=[];
+  const core=new THREE.Mesh(new THREE.IcosahedronGeometry(1.2,1),new THREE.MeshBasicMaterial({color:0x4de2ff,wireframe:true}));g.add(core);
+  g.add(glow(0x4de2ff,6));const cl=label('Plataforma ML',{scale:.6,color:'#4de2ff'});cl.position.y=-2.2;g.add(cl);
+  roles.forEach((r,i)=>{const tilt=new THREE.Group();tilt.rotation.set(rand(-.7,.7),0,rand(-.7,.7));g.add(tilt);
+    const rad=3.4+(i%3)*.9;const ring=new THREE.Mesh(new THREE.TorusGeometry(rad,.012,6,100),new THREE.MeshBasicMaterial({color:0x4d6bff,transparent:true,opacity:.35}));ring.rotation.x=Math.PI/2;tilt.add(ring);
+    const sp=new THREE.Group();tilt.add(sp);const col=hsl(.5+i*.08,.85,.62);
+    const m=new THREE.Mesh(new THREE.SphereGeometry(.36,20,20),new THREE.MeshBasicMaterial({color:col}));m.position.x=rad;m.add(glow(col,2));sp.add(m);
+    const lb=label(r,{scale:.5,px:46});lb.position.y=.9;m.add(lb);mem.push({sp,v:(i%2?-1:1)*(.3+i*.05),ph:rand(0,6)})});
+  return{cam:[0,1.5,15],look:[0,0,0],update(t,dt){
+    core.rotation.y+=dt*.5;core.rotation.x+=dt*.3;core.scale.setScalar(1+Math.sin(t*2)*.05);
+    mem.forEach(o=>o.sp.rotation.y=o.ph+t*o.v)}};
+}
+
+function buildClose(g){
+  const geo=new THREE.TorusKnotGeometry(3.2,.9,260,20,2,3),n=geo.attributes.position.count,col=new Float32Array(n*3);
+  for(let i=0;i<n;i++){const c=hsl(.52+(i/n)*.2,.9,.62);col.set([c.r,c.g,c.b],i*3)}
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const knot=new THREE.Points(geo,pmat(.18,0xffffff,{vertexColors:true}));g.add(knot);
+  g.add(new THREE.Mesh(geo.clone(),new THREE.MeshBasicMaterial({color:0x4de2ff,wireframe:true,transparent:true,opacity:.05})));
+  g.add(glow(0x8b5cff,12));
+  return{cam:[0,0,16],look:[0,0,0],update(t){knot.rotation.y=t*.25;knot.rotation.x=t*.12;g.rotation.z=Math.sin(t*.2)*.1}};
+}
+
+/* ---------- notes + timing ---------- */
+const TARGETS=[25,40,50,50,60,50,45,60,120,30,30];
+const SPEAKERS=[['A','Persona A','#4de2ff'],['B','Persona B','#b58cff'],['C','Persona C','#4dffb0']];
+const SPK=[0,0,0,1,1,1,2,2,1,0,0];
+const NOTES=[
+ 'Abrir con energía y presentar al equipo. Gancho: "¿Cuánto tarda hoy llevar un modelo a producción?" (guion completo en guion.md)',
+ 'Contar un caso real del equipo: un deploy lento o un modelo que se degradó sin que nadie lo notara. Cerrar con la cita de Sculley.',
+ 'Explicar el CICLO mientras gira el anillo: el monitoreo alimenta el re-entrenamiento. Una frase por etapa. Pasa la palabra a B.',
+ 'Spot hasta 90% (AWS), checkpoints, tracking. Barras naranja = hoy, verde = con MLOps. Aclarar que son índices ilustrativos.',
+ 'Mover el slider de drift: más días = más puntos rojos y pérdida cuadrática. Contraste: alerta en 2 días cuesta centavos.',
+ 'Cada cubo es un commit; los rojos son bugs frenados por los tests antes de producción. De 2 días a 15 min. Pasa la palabra a C.',
+ 'Autoscaling en vivo: la curva verde es el tráfico. Ahorro contra provisionar para el pico. Mapa de servicios AWS sin entrar en detalle.',
+ 'Mover los sliders con números reales del equipo. Cómputo + horas + drift evitado = ahorro anual y payback. Pasa a la demo.',
+ 'DEMO: B maneja la pantalla, C narra qué está pasando en cada paso. Si algo falla: tener un video grabado de respaldo.',
+ 'Los 6 orbitan la plataforma: todos la tocan. Roadmap 30/60/90. A retoma la palabra.',
+ 'El pedido concreto: piloto de 90 días con 1 modelo y 3 métricas de éxito. Abrir preguntas.'
+];
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+
+/* ---------- boot ---------- */
+let scenes=[],cur=0,prev=0,t0=0,slideT0=0,started=false;
+const camPos=new THREE.Vector3(0,0,17),camLook=new THREE.Vector3();
+
+function boot(){
+  const builders=[buildHero,buildChaos,buildCycle,buildBars,buildDrift,buildPipeline,buildAuto,buildRoi,buildDemo,buildTeam,buildClose];
+  builders.forEach((b,i)=>{const g=new THREE.Group();g.position.x=i*SP;scene.add(g);const o=b(g);o.t=0;o.g=g;scenes.push(o)});
+  // dots
+  const dots=$('#dots');scenes.forEach((_,i)=>{const b=document.createElement('button');b.title='Slide '+(i+1);b.onclick=()=>go(i);dots.appendChild(b)});
+  // stagger
+  $$('.slide').forEach(s=>s.querySelectorAll('.rv').forEach((e,i)=>e.style.setProperty('--i',i)));
+  // sliders
+  const drift=$('#drift');drift.addEventListener('input',()=>S.drift=+drift.value);
+  ['iM','iC','iH','iR'].forEach(id=>$('#'+id).addEventListener('input',roi));
+  $$('input[type=range]').forEach(e=>e.addEventListener('pointerup',()=>e.blur()));
+  roi();
+  camPos.set(0,0,17);camLook.set(0,0,0);
+  go(0,true);
+  $('#load').style.opacity=0;setTimeout(()=>$('#load').remove(),900);
+  requestAnimationFrame(loop);
+}
+function roi(){
+  const m=+$('#iM').value,c=+$('#iC').value,h=+$('#iH').value,r=+$('#iR').value;
+  $('#vM').textContent=m;$('#vC').textContent=usd(c).replace('$','');$('#vH').textContent=h;$('#vR').textContent=r;
+  const comp=c*12*.4,time=h*52*r*.7,dr=m*.5*15000*.8,tot=comp+time+dr;
+  S.roi={c:comp,t:time,d:dr};
+  $('#rC').textContent=usd(comp);$('#rT').textContent=usd(time);$('#rD').textContent=usd(dr);$('#rTot').textContent=usd(tot);
+  const pay=30000/(tot/12);$('#rPay').textContent=pay.toFixed(1).replace('.',',')+' meses';
+}
+function go(n,force){
+  n=clamp(n,0,scenes.length-1);if(n===cur&&!force)return;
+  prev=cur;cur=n;scenes[cur].t=0;slideT0=performance.now();
+  if(!started&&cur>0){started=true;t0=performance.now()}
+  $$('.slide').forEach((s,i)=>s.classList.toggle('active',i===cur));
+  $$('#dots button').forEach((b,i)=>{b.classList.toggle('on',i===cur);b.classList.toggle('done',i<cur)});
+  const sp=SPEAKERS[SPK[cur]];$('#spkI').textContent=sp[0];$('#spkN').textContent=sp[1];$('#spk').style.setProperty('--sc',sp[2]);
+  $('#nh').textContent='Slide '+(cur+1)+' · '+sp[1]+' · objetivo '+fmt(TARGETS[cur]);$('#nb').textContent=NOTES[cur];
+  $('#tTg').textContent=fmt(TARGETS[cur]);
+}
+addEventListener('keydown',e=>{
+  if(e.target.matches&&e.target.matches('input')&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;
+  const k=e.key;
+  if(['ArrowRight','PageDown',' ','Enter'].includes(k)){e.preventDefault();go(cur+1)}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(k)){e.preventDefault();go(cur-1)}
+  else if(k==='Home')go(0);else if(k==='End')go(scenes.length-1);
+  else if(k==='n'||k==='N')$('#notes').classList.toggle('on');
+  else if(k==='f'||k==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}
+  else if(k==='r'||k==='R'){started=false;$('#tTot').textContent='00:00';$('#bar').style.width=0;go(0,true)}
+});
+let tx=0;addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50)go(cur+(d<0?1:-1))});
+
+let last=performance.now(),lastSec=-1;
+function loop(now){
+  requestAnimationFrame(loop);
+  const dt=Math.min((now-last)/1000,.05);last=now;
+  const s=scenes[cur];
+  const tp=new THREE.Vector3(cur*SP+s.cam[0]+mouse.x*1.4,s.cam[1]-mouse.y*.8,s.cam[2]);
+  const tl=new THREE.Vector3(cur*SP+s.look[0],s.look[1],s.look[2]);
+  const k=1-Math.exp(-2.6*dt);camPos.lerp(tp,k);camLook.lerp(tl,k);
+  camera.position.copy(camPos);camera.lookAt(camLook);
+  new Set([cur,prev]).forEach(i=>{scenes[i].t+=dt;scenes[i].update(scenes[i].t,dt)});
+  stars.position.x=camPos.x*.92;stars.rotation.y+=dt*.01;
+  // timer
+  const el=started?(now-t0)/1000:0,sl=(now-slideT0)/1000,sec=Math.floor(el*2+sl);
+  if(sec!==lastSec){lastSec=sec;
+    $('#tTot').textContent=String(Math.floor(el/60)).padStart(2,'0')+':'+String(Math.floor(el%60)).padStart(2,'0');
+    $('#tSl').textContent=fmt(sl);$('#timer').classList.toggle('over',sl>TARGETS[cur]+10);
+    $('#bar').style.width=Math.min(100,el/6)+'%'}
+  renderer.render(scene,camera);
+}
+(document.fonts&&document.fonts.load?Promise.all([document.fonts.load('600 48px "Space Grotesk"'),document.fonts.load('600 48px "JetBrains Mono"')]).catch(()=>{}):Promise.resolve()).then(boot);
+</script>
+</body>
+</html>
