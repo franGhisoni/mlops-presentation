@@ -48,6 +48,9 @@ ul.pts b{color:#fff;font-weight:600}
 .stat{flex:1;min-width:140px;padding:14px 18px;border-radius:22px;background:rgba(255,255,255,.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 0 0 1px rgba(255,255,255,.06)}
 .stat .l{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
 .stat .n{font-size:28px;font-weight:700;letter-spacing:-.03em}
+.tag{margin-left:auto;align-self:center;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.tag.ok{color:#4dffb0;background:rgba(77,255,176,.15)}.tag.mock{color:#ffb547;background:rgba(255,181,71,.15)}.tag.part{color:#4de2ff;background:rgba(77,226,255,.15)}.tag.next{color:#aab6d8;background:rgba(255,255,255,.1)}
+code{font-family:"JetBrains Mono",monospace;font-size:.82em;background:rgba(255,255,255,.1);padding:2px 7px;border-radius:8px;color:#fff}
 .legend{display:flex;gap:18px;margin-top:16px;font-size:13px;color:var(--mute)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .steps{list-style:none;display:grid;gap:8px;counter-reset:s}
@@ -100,57 +103,57 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border:none;border-ra
 
 <!-- 1 TITULO -->
 <section class="slide" id="s1"><div class="panel bare">
-  <p class="kicker rv">Plataforma ML · Equipo de 6</p>
+  <p class="kicker rv">Plataforma ML · Caso: Customer Churn</p>
   <h1 class="rv">MLOps</h1>
-  <p class="sub rv">Del notebook a producción — sin miedo, sin sorpresas y con la factura bajo control.</p>
-  <p class="meta rv">10 MIN · PROPUESTA DE ADOPCIÓN · → PARA AVANZAR · N NOTAS · F PANTALLA COMPLETA</p>
+  <p class="sub rv">Del notebook a producción: lo que ya construimos, lo que simulamos y lo que viene.</p>
+  <p class="meta rv">10 MIN · PoC END-TO-END · → PARA AVANZAR · N NOTAS · F PANTALLA COMPLETA</p>
 </div></section>
 
 <!-- 2 PROBLEMA -->
 <section class="slide" id="s2"><div class="panel">
   <p class="kicker rv">01 · El problema</p>
-  <h2 class="rv">Hoy entrenamos y desplegamos a mano</h2>
+  <h2 class="rv">Un modelo en un notebook no genera valor</h2>
   <ul class="pts bad">
-    <li class="rv"><b>Entrenamientos sin versionar:</b> nadie sabe qué datos ni hiperparámetros dieron "el modelo bueno".</li>
-    <li class="rv"><b>Deploy manual de 2–3 días</b> que depende de una sola persona.</li>
-    <li class="rv"><b>Nadie mira el modelo en producción:</b> nos enteramos cuando se queja el cliente.</li>
-    <li class="rv"><b>GPUs on-demand prendidas 24/7</b> "por las dudas".</li>
+    <li class="rv"><b>Sin tracking:</b> nadie sabe qué datos ni hiperparámetros dieron "el modelo bueno".</li>
+    <li class="rv"><b>Deploy manual</b> que depende de una sola persona.</li>
+    <li class="rv"><b>Sin monitoreo:</b> nos enteramos cuando el cliente ya se fue.</li>
+    <li class="rv"><b>Infra a mano:</b> servidores creados a clicks, imposibles de reproducir.</li>
   </ul>
-  <div class="callout rv">En un sistema de ML el código del modelo es una fracción chica: el resto es datos, infra y operación (Sculley et al., NeurIPS 2015, <i>Hidden Technical Debt in ML Systems</i>).</div>
+  <div class="callout rv">Nuestro caso: <b>predecir qué clientes van a abandonar</b> (churn) para actuar antes. En ML el código del modelo es una fracción chica del sistema; el resto es datos, infra y operación (Sculley et al., NeurIPS 2015).</div>
 </div></section>
 
 <!-- 3 CICLO -->
 <section class="slide" id="s3"><div class="panel">
-  <p class="kicker rv">02 · La idea</p>
+  <p class="kicker rv">02 · El ciclo, y dónde estamos</p>
   <h2 class="rv">MLOps = DevOps + datos + modelos</h2>
   <ol class="steps" id="steps">
-    <li class="step rv"><b>Datos</b> versionados y validados</li>
-    <li class="step rv"><b>Entrenar</b> pipelines reproducibles</li>
-    <li class="step rv"><b>Validar</b> tests de datos y de modelo</li>
-    <li class="step rv"><b>Desplegar</b> CI/CD con canary</li>
-    <li class="step rv"><b>Monitorear</b> drift, latencia, calidad</li>
-    <li class="step rv"><b>Re-entrenar</b> automático por trigger</li>
+    <li class="step rv"><b>Datos</b> sintéticos, sin feature store <span class="tag mock">Mock</span></li>
+    <li class="step rv"><b>Entrenar</b> LR vs Random Forest en MLflow <span class="tag ok">Real</span></li>
+    <li class="step rv"><b>Validar</b> F1 + pytest + flake8 <span class="tag ok">Real</span></li>
+    <li class="step rv"><b>Desplegar</b> Docker + GitHub Actions <span class="tag part">Parcial</span></li>
+    <li class="step rv"><b>Monitorear</b> drift y métricas <span class="tag next">Roadmap</span></li>
+    <li class="step rv"><b>Re-entrenar</b> disparo automático <span class="tag next">Roadmap</span></li>
   </ol>
-  <p class="foot rv">Un ciclo cerrado: cada vuelta es automática, auditable y repetible.</p>
+  <p class="foot rv">Parcial: el CD a AWS está escrito pero comentado hasta conectar credenciales.</p>
 </div></section>
 
 <!-- 4 COSTO -->
 <section class="slide" id="s4"><div class="panel">
-  <p class="kicker rv">03 · Costo y riesgo de entrenar</p>
-  <h2 class="rv">Entrenar a ciegas es caro</h2>
+  <p class="kicker rv">03 · Entrenamiento y tracking · Real</p>
+  <h2 class="rv">Dos modelos, un campeón, todo registrado</h2>
   <ul class="pts good">
-    <li class="rv"><b>Spot instances:</b> hasta 90% menos que on-demand (AWS), con <b>checkpoints</b> para no perder horas si se interrumpen.</li>
-    <li class="rv"><b>Experiment tracking:</b> no repetimos corridas por no saber qué ya probamos.</li>
-    <li class="rv"><b>Cache de features y pipelines:</b> no recalculamos lo mismo.</li>
-    <li class="rv"><b>Reproducibilidad:</b> el modelo de hace 6 meses se puede reconstruir y auditar.</li>
+    <li class="rv"><b>MLflow</b> guarda parámetros, métricas y artefactos de cada corrida.</li>
+    <li class="rv"><b>Selección automática:</b> el mejor F1 se exporta a <code>best_model.pkl</code>.</li>
+    <li class="rv"><b>Reproducible:</b> semillas fijas y todo el pipeline en <code>src/train.py</code>.</li>
+    <li class="rv">Gana <b>Random Forest: F1 0,55</b> contra 0,35 de la regresión logística.</li>
   </ul>
-  <div class="legend rv"><span><i style="background:#ff7a4d"></i>Hoy (índice 100)</span><span><i style="background:#4dffb0"></i>Con MLOps</span></div>
-  <p class="foot rv">Índices ilustrativos: reemplazar con datos reales del equipo.</p>
+  <div class="legend rv"><span><i style="background:#6aa8ff"></i>Regresión logística</span><span><i style="background:#4dffb0"></i>Random Forest (campeón)</span></div>
+  <p class="foot rv">Corrida local sobre dataset sintético (3.000 muestras, 25% de churn). Con datos reales las métricas van a cambiar.</p>
 </div></section>
 
 <!-- 5 DRIFT -->
 <section class="slide" id="s5"><div class="panel">
-  <p class="kicker rv">04 · Riesgo · Drift</p>
+  <p class="kicker rv">04 · Riesgo · Drift · <span class="a">aún no implementado</span></p>
   <h2 class="rv">Un modelo sin monitoreo se pudre en silencio</h2>
   <div class="ctrl rv"><label>Días hasta que alguien lo nota <span id="dDays">20</span></label><input type="range" id="drift" min="0" max="45" value="20"></div>
   <div class="row rv"><div class="stat"><div class="l">Datos fuera de distribución</div><div class="n a" id="ood">0%</div></div></div>
@@ -158,47 +161,44 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border:none;border-ra
     <div class="stat bad"><div class="l">Sin monitoreo</div><div class="n r" id="lossBad">$0</div></div>
     <div class="stat ok"><div class="l">Alerta en ≤2 días + retrain</div><div class="n g" id="lossGood">$0</div></div>
   </div>
-  <p class="foot rv">Supuestos ilustrativos: USD 20k/día en decisiones del modelo, −0,4 pp de precisión por día de drift. Pérdida acumulada = 40·d².</p>
+  <p class="foot rv">Supuestos ilustrativos: USD 20k/día en juego por decisiones del modelo, −0,4 pp de precisión por día de drift. Pérdida acumulada = 40·d².</p>
 </div></section>
 
 <!-- 6 CICD -->
 <section class="slide" id="s6"><div class="panel">
-  <p class="kicker rv">05 · Despliegues automatizados</p>
-  <h2 class="rv">De <span class="r">2 días</span> a <span class="g">15 minutos</span></h2>
+  <p class="kicker rv">05 · CI/CD · GitHub Actions</p>
+  <h2 class="rv">Cada push pasa por <span class="g">CI</span></h2>
   <ul class="pts good">
-    <li class="rv">Tests de <b>código, datos y modelo</b> en cada commit.</li>
-    <li class="rv"><b>Canary al 5%</b> comparando métricas contra el modelo actual.</li>
-    <li class="rv"><b>Rollback automático</b> si cae la métrica. Un click, sin heroísmos.</li>
-    <li class="rv">El mismo pipeline en dev, staging y prod.</li>
+    <li class="rv"><b>flake8 + pytest</b> en cada push y pull request.</li>
+    <li class="rv">Si pasa en <code>main</code>: <b>build de la imagen Docker</b>.</li>
+    <li class="rv"><b>Deploy a AWS</b> (ECR y EC2/ECS/App Runner) ya escrito pero <b>comentado</b> hasta conectar credenciales por OIDC.</li>
+    <li class="rv">Un mismo Dockerfile en local y producción: usuario no-root y healthcheck.</li>
   </ul>
   <div class="row rv">
-    <div class="stat"><div class="l">Desplegados</div><div class="n g" id="nDep">0</div></div>
-    <div class="stat"><div class="l">Frenados antes de prod</div><div class="n r" id="nBlk">0</div></div>
+    <div class="stat"><div class="l">Pasaron CI</div><div class="n g" id="nDep">0</div></div>
+    <div class="stat"><div class="l">Frenados por lint/tests</div><div class="n r" id="nBlk">0</div></div>
   </div>
+  <p class="foot rv">La animación simula el flujo. La estación ámbar (deploy a AWS) es la que falta activar.</p>
 </div></section>
 
 <!-- 7 AWS -->
 <section class="slide" id="s7"><div class="panel">
-  <p class="kicker rv">06 · Infra escalable · AWS</p>
-  <h2 class="rv">Pagamos por lo que usamos, no por el pico</h2>
-  <div class="row rv" style="margin-top:0">
-    <div class="stat"><div class="l">Instancias activas</div><div class="n c"><span id="asN">0</span><small>/ 20</small></div></div>
-    <div class="stat"><div class="l">Costo vs. provisión fija</div><div class="n g" id="asS">-0%</div></div>
-  </div>
+  <p class="kicker rv">06 · Infraestructura como código · Terraform</p>
+  <h2 class="rv">AWS reproducible en un comando</h2>
   <div class="chips">
-    <span class="chip rv"><b>S3</b>datos y artefactos</span>
-    <span class="chip rv"><b>SageMaker Pipelines</b>entrenamiento</span>
-    <span class="chip rv"><b>Model Registry</b>versiones y aprobación</span>
-    <span class="chip rv"><b>CodePipeline + ECR</b>CI/CD</span>
-    <span class="chip rv"><b>Endpoints</b>autoscaling</span>
-    <span class="chip rv"><b>Model Monitor + CloudWatch</b>drift y alertas</span>
-    <span class="chip rv"><b>EventBridge</b>triggers de retrain</span>
+    <span class="chip rv"><b>S3</b>artefactos, versionado y cifrado</span>
+    <span class="chip rv"><b>IAM</b>rol sin claves hardcodeadas</span>
+    <span class="chip rv"><b>Security Group</b>puertos 80, 8000 y 22</span>
+    <span class="chip rv"><b>EC2 t2.micro</b>Docker + AWS CLI vía user_data</span>
+    <span class="chip rv"><b>SSM</b>administración sin abrir SSH</span>
   </div>
+  <div class="callout rv">Hoy: <b>una sola instancia EC2</b>. Camino a producción: ECS Fargate detrás de un ALB con autoscaling horizontal (roadmap).</div>
+  <p class="foot rv">Código listo para <code>terraform plan</code> y <code>apply</code>.</p>
 </div></section>
 
 <!-- 8 ROI -->
 <section class="slide" id="s8"><div class="panel">
-  <p class="kicker rv">07 · El número que importa</p>
+  <p class="kicker rv">07 · Proyección al escalar</p>
   <h2 class="rv">Ahorro anual estimado</h2>
   <div class="ctrl rv"><label>Modelos en producción <span id="vM">8</span></label><input type="range" id="iM" min="1" max="30" value="8"></div>
   <div class="ctrl rv"><label>Gasto mensual de cómputo ML (USD) <span id="vC">12000</span></label><input type="range" id="iC" min="2000" max="60000" step="1000" value="12000"></div>
@@ -213,43 +213,43 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border:none;border-ra
     <div style="flex:2"><div class="stat" style="border-color:rgba(77,255,176,.4)"><div class="l">Total / año</div><div class="big g" id="rTot">$0</div></div></div>
     <div style="flex:1"><div class="stat"><div class="l">Payback</div><div class="n" id="rPay">—</div></div></div>
   </div>
-  <p class="foot rv">Inversión de adopción supuesta: USD 30.000 (setup + tooling año 1). Supuestos editables, no promesas.</p>
+  <p class="foot rv">Proyección con supuestos editables, no una medición. El ahorro de cómputo viene de Spot y autoscaling (roadmap). Inversión supuesta: USD 30.000.</p>
 </div></section>
 
 <!-- DEMO -->
 <section class="slide" id="sdemo"><div class="panel">
-  <p class="kicker rv">Demo en vivo</p>
-  <h2 class="rv">Del commit a producción, en vivo</h2>
+  <p class="kicker rv">Demo en vivo · lo que corre hoy</p>
+  <h2 class="rv">De código a predicción en 5 pasos</h2>
   <ol class="steps" id="dsteps">
-    <li class="step rv"><b>Commit</b> cambio en el código del modelo</li>
-    <li class="step rv"><b>Pipeline</b> tests + entrenamiento automático</li>
-    <li class="step rv"><b>Registry</b> nueva versión, aprobada</li>
-    <li class="step rv"><b>Canary</b> 5% del tráfico al modelo nuevo</li>
-    <li class="step rv"><b>Alerta</b> drift detectado y re-entrenamiento</li>
+    <li class="step rv"><b>Entrenar</b> <code>python -m src.train</code></li>
+    <li class="step rv"><b>Comparar</b> <code>mlflow ui</code></li>
+    <li class="step rv"><b>Predecir</b> <code>/docs</code> → POST /predict</li>
+    <li class="step rv"><b>Empaquetar</b> <code>docker build</code> + /health</li>
+    <li class="step rv"><b>Integrar</b> push → GitHub Actions</li>
   </ol>
-  <p class="foot rv">Cambiá estos pasos por el flujo real de tu demo. Cambio de pantalla: Alt+Tab.</p>
+  <p class="foot rv">Plan B: video grabado de los 5 pasos por si falla la red.</p>
 </div></section>
 
 <!-- 9 EQUIPO -->
 <section class="slide" id="s9"><div class="panel">
-  <p class="kicker rv">08 · Cómo lo hacemos · 6 personas</p>
+  <p class="kicker rv">08 · De PoC a producción</p>
   <h2 class="rv">Roadmap de 90 días</h2>
   <div class="timeline">
-    <div class="tl rv"><em>MES 1</em><div><b>Fundaciones.</b> Datos versionados, tracking de experimentos, pipeline de entrenamiento reproducible.</div></div>
-    <div class="tl rv"><em>MES 2</em><div><b>Delivery.</b> CI/CD, Model Registry, endpoints con autoscaling y canary.</div></div>
-    <div class="tl rv"><em>MES 3</em><div><b>Operación.</b> Monitoreo de drift, alertas y re-entrenamiento automático.</div></div>
+    <div class="tl rv"><em>MES 1</em><div><b>Deploy real.</b> CD a AWS con OIDC y ECR, MLflow remoto (S3 + RDS), Model Registry con alias <code>@champion</code>.</div></div>
+    <div class="tl rv"><em>MES 2</em><div><b>Observar.</b> Prometheus en la API, log de predicciones y detección de drift con Evidently AI.</div></div>
+    <div class="tl rv"><em>MES 3</em><div><b>Escalar.</b> Re-entrenamiento automático, ECS Fargate + ALB con autoscaling, Feature Store.</div></div>
   </div>
-  <p class="foot rv">Roles: Data Eng · ML Eng ×2 · Data Sci · DevOps/SRE · Product. Todos tocan la plataforma; nadie es cuello de botella.</p>
+  <p class="foot rv">Es el camino que plantea el README de la PoC: está diseñado, todavía no construido.</p>
 </div></section>
 
 <!-- 10 CIERRE -->
 <section class="slide" id="s10"><div class="panel bare">
   <p class="kicker rv">09 · Lo que pedimos</p>
-  <p class="ask rv">Aprobar un <span class="c">piloto de 90 días</span> con 1 modelo y el equipo completo.</p>
+  <p class="ask rv">Aprobar el paso de <span class="c">PoC a producción</span> en 90 días.</p>
   <ul class="pts good" style="max-width:520px">
-    <li class="rv">Deploy en <b>&lt; 1 hora</b> (hoy 2–3 días)</li>
-    <li class="rv">Costo de cómputo <b>−30%</b></li>
+    <li class="rv">CD automático a AWS en cada push a <b>main</b></li>
     <li class="rv">Drift detectado en <b>&lt; 48 h</b></li>
+    <li class="rv">Serving con <b>autoscaling</b> (ECS Fargate)</li>
   </ul>
   <h1 class="rv" style="margin-top:34px;font-size:clamp(48px,6vw,90px)">¿Preguntas?</h1>
 </div></section>
@@ -359,7 +359,7 @@ function buildCycle(g){
   const R=5.2,nodes=[],ring=new THREE.Group();g.add(ring);
   ring.add(new THREE.Mesh(new THREE.TorusGeometry(R,.035,8,160),new THREE.MeshBasicMaterial({color:0x4de2ff,transparent:true,opacity:.5})));
   for(let i=0;i<6;i++){
-    const a=Math.PI/2-i*Math.PI/3,col=hsl(.53+i*.075,.9,.6);
+    const a=Math.PI/2-i*Math.PI/3,col=new THREE.Color([0xffb547,0x4dffb0,0x4dffb0,0x4de2ff,0x7d89b0,0x7d89b0][i]);
     const m=new THREE.Mesh(new THREE.SphereGeometry(.5,24,24),new THREE.MeshBasicMaterial({color:col}));
     m.position.set(Math.cos(a)*R,Math.sin(a)*R,0);const gl=glow(col,2.6);m.add(gl);ring.add(m);
     const lb=label(STEP_NAMES[i],{scale:.8});lb.position.set(Math.cos(a)*(R+1.6),Math.sin(a)*(R+1.3),0);ring.add(lb);
@@ -377,19 +377,19 @@ function buildCycle(g){
 }
 
 function buildBars(g){
-  const cats=[['Cómputo',100,35],['Reentrenos',100,20],['Horas manuales',100,30],['Incidentes',100,15]],bars=[];
-  cats.forEach((c,i)=>{const x=(i-1.5)*3.3;
-    const lb=label(c[0],{scale:.55,px:46,color:'#9fabcc'});lb.position.set(x,-.7,1.2);g.add(lb);
-    [[-.6,c[1],0xff7a4d],[.6,c[2],0x4dffb0]].forEach(([dx,val,col],k)=>{
-      const geo=new THREE.BoxGeometry(.95,1,.95);geo.translate(0,.5,0);
+  const cats=[['Accuracy',.745,.835],['F1',.349,.548],['ROC-AUC',.660,.865]],bars=[];
+  cats.forEach((c,i)=>{const x=(i-1)*3.8;
+    const lb=label(c[0],{scale:.6,px:50,color:'#9fabcc'});lb.position.set(x,-.75,1.2);g.add(lb);
+    [[-.7,c[1],0x6aa8ff],[.7,c[2],0x4dffb0]].forEach(([dx,val,col],k)=>{
+      const geo=new THREE.BoxGeometry(1.1,1,1.1);geo.translate(0,.5,0);
       const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.35,metalness:.3,roughness:.35}));
       m.position.set(x+dx,0,0);m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.35})));
-      g.add(m);const vl=label(String(val),{scale:.6,mono:true,color:k?'#4dffb0':'#ff9a70'});g.add(vl);
-      bars.push({m,vl,val,delay:.4+i*.18+k*.12,x:x+dx})})});
-  const grid=new THREE.GridHelper(15,15,0x24407a,0x111c3a);grid.position.y=-.01;g.add(grid);
-  return{cam:[0,4.5,14],look:[0,2.4,0],update(t){
-    bars.forEach(b=>{const h=Math.max(.001,b.val/100*6*easeOut((t-b.delay)/1.1));b.m.scale.y=h;b.vl.position.set(b.x,h+.55,0);b.vl.material.opacity=clamp((t-b.delay-.6)*2)});
-    g.rotation.y=Math.sin(t*.25)*.35-.15}};
+      g.add(m);const vl=label(val.toFixed(2).replace('.',','),{scale:.6,mono:true,color:k?'#4dffb0':'#9ec4ff'});g.add(vl);
+      bars.push({m,vl,val,delay:.4+i*.2+k*.15,x:x+dx})})});
+  const grid=new THREE.GridHelper(16,16,0x24407a,0x111c3a);grid.position.y=-.01;g.add(grid);
+  return{cam:[-2,4.5,18],look:[-2,2.8,0],update(t){
+    bars.forEach(b=>{const h=Math.max(.001,b.val*7.5*easeOut((t-b.delay)/1.1));b.m.scale.y=h;b.vl.position.set(b.x,h+.55,0);b.vl.material.opacity=clamp((t-b.delay-.6)*2)});
+    g.rotation.y=Math.sin(t*.25)*.3-.12}};
 }
 
 function buildDrift(g){
@@ -420,8 +420,8 @@ function buildDrift(g){
 }
 
 function buildPipeline(g){
-  const xs=[-9,-4.5,0,4.5,9],names=['Commit','Tests','Build','Canary 5%','Producción'];
-  const cols=[0xffffff,0x4de2ff,0x8b5cff,0xffb547,0x4dffb0];
+  const xs=[-9,-4.5,0,4.5,9],names=['Commit','flake8','pytest','Docker build','Deploy AWS'];
+  const cols=[0xffffff,0x4de2ff,0x8b5cff,0x4dffb0,0xffb547];
   const belt=new THREE.Mesh(new THREE.BoxGeometry(23,.08,.8),new THREE.MeshBasicMaterial({color:0x1b2c5e}));belt.position.y=-.6;g.add(belt);
   xs.forEach((x,i)=>{const geo=new THREE.BoxGeometry(1.7,1.7,1.7);
     const e=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:cols[i]}));e.position.set(x,.2,0);g.add(e);
@@ -432,7 +432,7 @@ function buildPipeline(g){
   function mk(){const m=new THREE.Mesh(new THREE.BoxGeometry(.5,.5,.5),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true}));
     m.position.set(-11.5,.2,0);g.add(m);cubes.push({m,fail:Math.random()<.28,vy:0,dead:false,st:0})}
   g.rotation.y=.5;
-  return{cam:[-4,3,17],look:[-4,0,0],update(t,dt){
+  return{cam:[1,3,22],look:[1,0,0],update(t,dt){
     spawn-=dt;if(spawn<=0){mk();spawn=.95}
     for(let i=cubes.length-1;i>=0;i--){const c=cubes[i],m=c.m;
       if(c.dead){c.vy-=dt*14;m.position.y+=c.vy*dt;m.rotation.x+=dt*5;m.rotation.z+=dt*4;m.material.opacity-=dt*.8;
@@ -447,27 +447,24 @@ function buildPipeline(g){
     for(let i=rings.length-1;i>=0;i--){const o=rings[i];o.a+=dt;o.r.scale.setScalar(1+o.a*4);o.r.material.opacity=1-o.a;if(o.a>=1){g.remove(o.r);rings.splice(i,1)}}}};
 }
 
-function buildAuto(g){
-  const COLS=5,ROWS=4,boxes=[];
-  const on=new THREE.Color(0x4de2ff),off=new THREE.Color(0x1a2447);
-  for(let i=0;i<20;i++){const geo=new THREE.BoxGeometry(1.1,.5,1.1);geo.translate(0,.25,0);
-    const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0x1a2447,emissive:0x4de2ff,emissiveIntensity:0,metalness:.4,roughness:.4}));
-    m.position.set((i%COLS-2)*1.6,0,((i/COLS|0)-1.5)*1.6);m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x4de2ff,transparent:true,opacity:.4})));
-    g.add(m);boxes.push({m,cur:1})}
-  const H=120,line=new Float32Array(H*3),lgm=new THREE.BufferGeometry();lgm.setAttribute('position',new THREE.BufferAttribute(line,3));
-  const hist=new Array(H).fill(.5);g.add(new THREE.Line(lgm,new THREE.LineBasicMaterial({color:0x4dffb0})));
-  const lb=label('Tráfico en tiempo real',{scale:.5,px:44,color:'#4dffb0'});lb.position.set(0,-.9,5.2);g.add(lb);
-  const nEl=$('#asN'),sEl=$('#asS');let acc=0,avg=.5,tick=0,sampleT=0,act=10;
-  const f=t=>clamp(.5+.38*Math.sin(t*.5)+.1*Math.sin(t*1.7+1),.05,1);
-  return{cam:[0,7.5,12],look:[0,0,1],update(t,dt){
-    const v=f(t);act=clamp(Math.ceil(v*20),1,20);avg+=(act/20-avg)*dt*.15;
-    boxes.forEach((b,i)=>{const tg=i<act?1:0;b.cur+=(tg-b.cur)*(1-Math.exp(-6*dt));
-      b.m.scale.y=.3+b.cur*.7;b.m.material.emissiveIntensity=b.cur*.9;b.m.material.color.copy(off).lerp(on,b.cur*.5)});
-    sampleT+=dt;if(sampleT>.06){sampleT=0;hist.shift();hist.push(v)}
-    for(let i=0;i<H;i++){line[i*3]=(i/(H-1)-.5)*10;line[i*3+1]=hist[i]*2.2-.6;line[i*3+2]=5.2}
-    lgm.attributes.position.needsUpdate=true;
-    if(((tick++)&7)===0){nEl.textContent=act;sEl.textContent='−'+Math.round((1-avg)*100)+'%'}
-    g.rotation.y=Math.sin(t*.15)*.25}};
+function buildInfra(g){
+  const mat=(c,e)=>new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:e||.45,metalness:.35,roughness:.35});
+  const ec2=new THREE.Mesh(new THREE.BoxGeometry(1.8,1.8,1.8),mat(0x4de2ff,.5));g.add(ec2);g.add(glow(0x4de2ff,6));
+  const sg=new THREE.Mesh(new THREE.IcosahedronGeometry(2.7,1),new THREE.MeshBasicMaterial({color:0x4dffb0,wireframe:true,transparent:true,opacity:.28}));g.add(sg);
+  const s3=new THREE.Mesh(new THREE.CylinderGeometry(1,1,1.3,32),mat(0xffb547,.4));s3.position.set(-5.6,2.4,0);g.add(s3);
+  const iam=new THREE.Mesh(new THREE.TorusKnotGeometry(.7,.22,100,12),mat(0xb58cff,.5));iam.position.set(5.6,2.4,0);g.add(iam);
+  [['EC2 t2.micro',[0,-3.5,0],'#4de2ff'],['S3 · artefactos',[-5.6,.8,0],'#ffb547'],['IAM · sin claves',[5.6,.8,0],'#b58cff'],['Security Group',[0,3.8,0],'#4dffb0']].forEach(([t,p,c])=>{const l=label(t,{scale:.6,color:c});l.position.set(...p);g.add(l)});
+  const tf=label('$ terraform apply',{mono:true,scale:.6,color:'#9fabcc'});tf.position.set(0,-4.8,0);g.add(tf);
+  const links=[s3.position,iam.position];
+  const lg=new THREE.BufferGeometry().setFromPoints([s3.position,new THREE.Vector3(),iam.position,new THREE.Vector3()]);
+  g.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0x4de2ff,transparent:true,opacity:.35})));
+  const N=16,pp=new Float32Array(N*3),pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pp,3));
+  g.add(new THREE.Points(pg,pmat(.4,0xffffff)));
+  return{cam:[-2,0,19],look:[-2,0,0],update(t,dt){
+    for(let i=0;i<N;i++){const src=links[i%2],k=((t*.35+i/N)%1);pp[i*3]=src.x*(1-k);pp[i*3+1]=src.y*(1-k);pp[i*3+2]=0}
+    pg.attributes.position.needsUpdate=true;
+    ec2.rotation.y=t*.4;ec2.rotation.x=t*.2;sg.rotation.y=-t*.12;sg.rotation.x=t*.08;iam.rotation.x=t*.6;iam.rotation.y=t*.4;s3.rotation.y=t*.3;
+    g.rotation.y=Math.sin(t*.2)*.2}};
 }
 
 function buildRoi(g){
@@ -504,9 +501,9 @@ function buildDemo(g){
 }
 
 function buildTeam(g){
-  const roles=['Data Eng','ML Eng','ML Eng','Data Sci','DevOps','Product'],mem=[];
+  const roles=['Registry','CD → AWS','Drift','Feature Store','Autoscaling','Observabilidad'],mem=[];
   const core=new THREE.Mesh(new THREE.IcosahedronGeometry(1.2,1),new THREE.MeshBasicMaterial({color:0x4de2ff,wireframe:true}));g.add(core);
-  g.add(glow(0x4de2ff,6));const cl=label('Plataforma ML',{scale:.6,color:'#4de2ff'});cl.position.y=-2.2;g.add(cl);
+  g.add(glow(0x4de2ff,6));const cl=label('PoC Churn',{scale:.7,color:'#4de2ff'});cl.position.y=-2.2;g.add(cl);
   roles.forEach((r,i)=>{const tilt=new THREE.Group();tilt.rotation.set(rand(-.7,.7),0,rand(-.7,.7));g.add(tilt);
     const rad=3.4+(i%3)*.9;const ring=new THREE.Mesh(new THREE.TorusGeometry(rad,.012,6,100),new THREE.MeshBasicMaterial({color:0x4d6bff,transparent:true,opacity:.35}));ring.rotation.x=Math.PI/2;tilt.add(ring);
     const sp=new THREE.Group();tilt.add(sp);const col=hsl(.5+i*.08,.85,.62);
@@ -532,17 +529,17 @@ const TARGETS=[25,40,50,50,60,50,45,60,120,30,30];
 const SPEAKERS=[['A','Persona A','#4de2ff'],['B','Persona B','#b58cff'],['C','Persona C','#4dffb0']];
 const SPK=[0,0,0,1,1,1,2,2,1,0,0];
 const NOTES=[
- 'Abrir con energía y presentar al equipo. Gancho: "¿Cuánto tarda hoy llevar un modelo a producción?" (guion completo en guion.md)',
- 'Contar un caso real del equipo: un deploy lento o un modelo que se degradó sin que nadie lo notara. Cerrar con la cita de Sculley.',
- 'Explicar el CICLO mientras gira el anillo: el monitoreo alimenta el re-entrenamiento. Una frase por etapa. Pasa la palabra a B.',
- 'Spot hasta 90% (AWS), checkpoints, tracking. Barras naranja = hoy, verde = con MLOps. Aclarar que son índices ilustrativos.',
- 'Mover el slider de drift: más días = más puntos rojos y pérdida cuadrática. Contraste: alerta en 2 días cuesta centavos.',
- 'Cada cubo es un commit; los rojos son bugs frenados por los tests antes de producción. De 2 días a 15 min. Pasa la palabra a C.',
- 'Autoscaling en vivo: la curva verde es el tráfico. Ahorro contra provisionar para el pico. Mapa de servicios AWS sin entrar en detalle.',
- 'Mover los sliders con números reales del equipo. Cómputo + horas + drift evitado = ahorro anual y payback. Pasa a la demo.',
- 'DEMO: B maneja la pantalla, C narra qué está pasando en cada paso. Si algo falla: tener un video grabado de respaldo.',
- 'Los 6 orbitan la plataforma: todos la tocan. Roadmap 30/60/90. A retoma la palabra.',
- 'El pedido concreto: piloto de 90 días con 1 modelo y 3 métricas de éxito. Abrir preguntas.'
+ 'Presentar al equipo y el caso: predicción de churn. Gancho: "¿cuánto tarda hoy un modelo en llegar a producción?". Aclarar desde el inicio que van a distinguir lo REAL, lo MOCK y lo que es ROADMAP.',
+ 'Contar el dolor de un modelo en un notebook: sin tracking, deploy manual, sin monitoreo, infra a mano. Cerrar con el caso de churn.',
+ 'Recorrer el ciclo con las etiquetas: verde = real, naranja = mock (datos sintéticos), celeste = parcial (CD comentado), gris = roadmap (monitoreo y re-entrenamiento). Pasa la palabra a B.',
+ 'Mostrar las barras: Random Forest gana en accuracy, F1 y AUC. Explicar MLflow y la selección automática por F1. Aclarar que el dataset es sintético.',
+ 'Slide de riesgo (NO implementado). Mover el slider: más días sin detectar = más puntos rojos y pérdida cuadrática. Es la razón del roadmap de monitoreo (Evidently + Prometheus).',
+ 'Cada cubo es un commit. CI real: flake8 + pytest. En main hace docker build. La estación ámbar (deploy a AWS) está escrita y comentada. Pasa la palabra a C.',
+ 'Terraform: S3, IAM, Security Group y EC2. Es una sola instancia hoy; ECS Fargate + ALB es el siguiente paso. Mencionar que es reproducible con un comando.',
+ 'Proyección con supuestos editables. Mover sliders con números de ejemplo del equipo. Aclarar que es proyección, no medición. Pasa a la demo.',
+ 'DEMO: B maneja la terminal, C narra. Pasos: train, mlflow ui, /docs predict, docker build + /health, push a GitHub Actions. Plan B: video grabado.',
+ 'Roadmap de 90 días tomado del README: deploy real, observabilidad, escala. A retoma la palabra.',
+ 'El pedido concreto: pasar de PoC a producción en 90 días con tres métricas. Abrir preguntas.'
 ];
 const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
 
@@ -551,7 +548,7 @@ let scenes=[],cur=0,prev=0,t0=0,slideT0=0,started=false;
 const camPos=new THREE.Vector3(0,0,17),camLook=new THREE.Vector3();
 
 function boot(){
-  const builders=[buildHero,buildChaos,buildCycle,buildBars,buildDrift,buildPipeline,buildAuto,buildRoi,buildDemo,buildTeam,buildClose];
+  const builders=[buildHero,buildChaos,buildCycle,buildBars,buildDrift,buildPipeline,buildInfra,buildRoi,buildDemo,buildTeam,buildClose];
   builders.forEach((b,i)=>{const g=new THREE.Group();g.position.x=i*SP;scene.add(g);const o=b(g);o.t=0;o.g=g;scenes.push(o)});
   // dots
   const dots=$('#dots');scenes.forEach((_,i)=>{const b=document.createElement('button');b.title='Slide '+(i+1);b.onclick=()=>go(i);dots.appendChild(b)});
